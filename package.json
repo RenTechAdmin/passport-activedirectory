@@ -15,8 +15,8 @@
   },
   "author": "Branden Horiuchi <bhoriuchi@gmail.com>",
   "dependencies": {
-    "activedirectory2": "^2.1.0",
-    "passport": "^0.6.0"
+    "activedirectory2": "git+https://github.com/RenTechAdmin/node-activedirectory2.git",
+    "passport": "^0.7.0"
   },
   "devDependencies": {
     "rollup": "^0.34.10",
