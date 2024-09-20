@@ -1,5 +1,5 @@
 {
-  "name": "@rentechadmin/passport-activedirectory",
+  "name": "@jayv30/passport-activedirectory",
   "version": "1.4.0",
   "description": "Active Directory strategy for passport.js",
   "license": "MIT",
@@ -15,7 +15,7 @@
   },
   "author": "Jay Karlsven <jay@karlsven.dev>",
   "dependencies": {
-    "activedirectory2": "git+https://github.com/RenTechAdmin/node-activedirectory2.git",
+    "activedirectory2": "npm:@jayv30/activedirectory2@^2.3.2",
     "passport": "^0.7.0"
   },
   "devDependencies": {
