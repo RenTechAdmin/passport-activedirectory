@@ -1,10 +1,12 @@
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+function _interopDefault(ex) {
+  return ex && typeof ex === 'object' && 'default' in ex ? ex['default'] : ex;
+}
 
 var util = _interopDefault(require('util'));
 var passport = _interopDefault(require('passport'));
-var ActiveDirectory = _interopDefault(require('activedirectory2'));
+var ActiveDirectory = _interopDefault(require('@jayv30/activedirectory2'));
 
 /*
  * modified version of passport-windowsauth (https://github.com/auth0/passport-windowsauth)
@@ -21,10 +23,29 @@ var ActiveDirectory = _interopDefault(require('activedirectory2'));
 var DEFAULT_GROUP_VALUE = 'users';
 var DEFAULT_USERNAME_FIELD = 'username';
 var DEFAULT_PASSWORD_FIELD = 'password';
-var DEFAULT_ATTRS = ['cn', 'dn', 'sn', 'displayName', 'givenName', 'title', 'userPrincipalName', 'sAMAccountName', 'mail', 'description', 'telephoneNumber', 'memberOf'];
+var DEFAULT_ATTRS = [
+  'cn',
+  'dn',
+  'sn',
+  'displayName',
+  'givenName',
+  'title',
+  'userPrincipalName',
+  'sAMAccountName',
+  'mail',
+  'description',
+  'telephoneNumber',
+  'memberOf',
+];
 
 var DEFAULT_FILTER = function DEFAULT_FILTER(username) {
-  return '(&(objectclass=user)(|(sAMAccountName=' + username + ')(UserPrincipalName=' + username + ')))';
+  return (
+    '(&(objectclass=user)(|(sAMAccountName=' +
+    username +
+    ')(UserPrincipalName=' +
+    username +
+    ')))'
+  );
 };
 
 function getUserNameFromHeader(req) {
@@ -37,7 +58,10 @@ function Strategy(options, verify) {
     verify = options;
     options = {};
   }
-  if (!verify) throw new Error('windows authentication strategy requires a verify function');
+  if (!verify)
+    throw new Error(
+      'windows authentication strategy requires a verify function',
+    );
 
   passport.Strategy.call(this);
 
@@ -47,7 +71,8 @@ function Strategy(options, verify) {
   this._options = options;
   this._passReqToCallback = options.passReqToCallback;
   this._integrated = options.integrated === false ? options.integrated : true;
-  this._getUserNameFromHeader = options.getUserNameFromHeader || getUserNameFromHeader;
+  this._getUserNameFromHeader =
+    options.getUserNameFromHeader || getUserNameFromHeader;
   this._group = options.group;
 
   if (!this._integrated) {
@@ -59,10 +84,12 @@ function Strategy(options, verify) {
     this._ad = options.ldap;
   } else {
     if (this._options.ldap.attributes) {
-      if (typeof (this._options.ldap.attributes) === 'string') {
-        this._options.ldap.attributes = { user: [this._options.ldap.attributes] }
+      if (typeof this._options.ldap.attributes === 'string') {
+        this._options.ldap.attributes = {
+          user: [this._options.ldap.attributes],
+        };
       } else if (Array.isArray(this._options.ldap.attributes)) {
-        this._options.ldap.attributes = { user: this._options.ldap.attributes }
+        this._options.ldap.attributes = { user: this._options.ldap.attributes };
       }
     }
     this._ad = new ActiveDirectory(this._options.ldap);
@@ -87,19 +114,20 @@ Strategy.prototype.mapProfile = function (i) {
     displayName: i.displayName,
     name: {
       familyName: i.sn || i.surName,
-      givenName: i.gn || i.givenName
+      givenName: i.gn || i.givenName,
     },
     emails: i.mail ? [{ value: i.mail }] : undefined,
-    _json: i
+    _json: i,
   };
 };
 
 Strategy.prototype.authenticate = function (req) {
   var _this = this;
 
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var options =
+    arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var username = null,
-      password = null;
+    password = null;
 
   // get username and password
 
@@ -126,42 +154,63 @@ Strategy.prototype.authenticate = function (req) {
 
   var verify = function verify(userProfile) {
     if (_this._passReqToCallback) {
-      if (_this._ad) return _this._verify(req, userProfile, _this._ad, verified);else return _this._verify(req, userProfile, verified);
+      if (_this._ad)
+        return _this._verify(req, userProfile, _this._ad, verified);
+      else return _this._verify(req, userProfile, verified);
     } else {
-      if (_this._ad) return _this._verify(userProfile, _this._ad, verified);else return _this._verify(userProfile, verified);
+      if (_this._ad) return _this._verify(userProfile, _this._ad, verified);
+      else return _this._verify(userProfile, verified);
     }
   };
 
   var auth = function auth(userProfile) {
-    return _this._ad.authenticate(userProfile._json.dn, password, function (err, auth) {
-      var authFailureMessage = 'Authentication failed for ' + username;
-      if (err) {
-        return err.name === 'InvalidCredentialsError' ? _this.fail('' + authFailureMessage) : _this.error(err);
-      }
-      if (!auth) return _this.fail(authFailureMessage);
-      return verify(userProfile);
-    });
+    return _this._ad.authenticate(
+      userProfile._json.dn,
+      password,
+      function (err, auth) {
+        var authFailureMessage = 'Authentication failed for ' + username;
+        if (err) {
+          return err.name === 'InvalidCredentialsError'
+            ? _this.fail('' + authFailureMessage)
+            : _this.error(err);
+        }
+        if (!auth) return _this.fail(authFailureMessage);
+        return verify(userProfile);
+      },
+    );
   };
 
   // look for the user if using ldap auth
   if (this._ad) {
-    var group = req.body.group || req.query.group || this._group || DEFAULT_GROUP_VALUE;
+    var group =
+      req.body.group || req.query.group || this._group || DEFAULT_GROUP_VALUE;
     var ldap = this._options.ldap;
-    var filter = typeof ldap.filter === 'function' ? ldap.filter(username) : DEFAULT_FILTER(username);
+    var filter =
+      typeof ldap.filter === 'function'
+        ? ldap.filter(username)
+        : DEFAULT_FILTER(username);
     var attributes = (ldap.attributes && ldap.attributes.user) || DEFAULT_ATTRS;
     attributes = Array.isArray(attributes) ? attributes : [attributes];
 
     // require the dn attribute which will be used during authentication
     if (attributes.indexOf('dn') === -1) attributes.push('dn');
 
-    return this._ad.find({ filter: filter, attributes: attributes }, function (err, results) {
-      if (err) return _this.error(err);
-      if (!results || !results[group] || !Array.isArray(results[group]) || !results[group].length) {
-        return _this.fail('The user "' + username + '" was not found');
-      }
-      var userProfile = _this.mapProfile(results[group][0]);
-      return _this._integrated ? verify(userProfile) : auth(userProfile);
-    });
+    return this._ad.find(
+      { filter: filter, attributes: attributes },
+      function (err, results) {
+        if (err) return _this.error(err);
+        if (
+          !results ||
+          !results[group] ||
+          !Array.isArray(results[group]) ||
+          !results[group].length
+        ) {
+          return _this.fail('The user "' + username + '" was not found');
+        }
+        var userProfile = _this.mapProfile(results[group][0]);
+        return _this._integrated ? verify(userProfile) : auth(userProfile);
+      },
+    );
   }
 
   // non-ldap auth

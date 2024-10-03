@@ -1,6 +1,6 @@
 {
   "name": "@jayv30/passport-activedirectory",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Active Directory strategy for passport.js",
   "license": "MIT",
   "main": "index.js",
@@ -15,7 +15,7 @@
   },
   "author": "Jay Karlsven <jay@karlsven.dev>",
   "dependencies": {
-    "activedirectory2": "npm:@jayv30/activedirectory2@^2.3.2",
+    "@jayv30/activedirectory2": "^2.3.2",
     "passport": "^0.7.0"
   },
   "devDependencies": {
